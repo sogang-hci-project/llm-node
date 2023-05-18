@@ -22,13 +22,9 @@ function getAllMarkDownFiles(folderPath: string) {
 const filePaths = getAllMarkDownFiles(folderPath);
 
 /**
- * load documents from markdown files and create Document instance
- * save local vector in DATA_STORE path for resuing vector db with static markdown files
- *
- * @returns splited text can be insedted into vector database
+ * Save vector db in DATA_STORE path for resuing vector db with static markdown files
  */
-
-const init = async () => {
+const saveVectorDatabaseIntoLocalPath = async () => {
   const documents: any = [];
   await Promise.all(
     filePaths.map(async (file: string) => {
@@ -53,4 +49,4 @@ const init = async () => {
   await vectorStore.save(DATA_STORE_PATH);
 };
 
-init();
+saveVectorDatabaseIntoLocalPath();
