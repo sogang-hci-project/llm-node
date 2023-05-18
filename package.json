@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-		"build": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json",
+    "build": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json",
     "start": "node dist/app.js",
     "dev": "nodemon"
   },
@@ -12,7 +12,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "langchain": "^0.0.76"
+    "dotenv": "^16.0.3",
+    "hnswlib-node": "^1.4.2",
+    "langchain": "^0.0.76",
+    "marked": "^5.0.2"
   },
   "devDependencies": {
     "@types/node": "^20.2.0",
