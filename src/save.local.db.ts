@@ -1,4 +1,5 @@
 import fs from "fs";
+import path from "path";
 import { extname, join } from "path";
 import { CharacterTextSplitter } from "langchain/text_splitter";
 import { Document } from "langchain/document";
@@ -6,16 +7,30 @@ import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 import { openAIApiKey } from "./constants/env";
+import { DATA_STORE_PATH } from "./constants";
 
 const folderPath = `${__dirname}/static/markdown`;
 
 function getAllMarkDownFiles(folderPath: string) {
-  const files = fs.readdirSync(folderPath);
-  /**
-   * check if other files exist with no .md extenstion
-   */
-  const jsonFiles = files.filter((file: string) => extname(file) === ".md");
-  const filePaths = jsonFiles.map((file: string) => join(folderPath, file));
+  let filePaths: any = [];
+
+  function traverseFolder(currentPath: string) {
+    const files = fs.readdirSync(currentPath);
+
+    files.forEach((file) => {
+      const filePath = path.join(currentPath, file);
+      const fileStat = fs.statSync(filePath);
+
+      if (fileStat.isDirectory()) {
+        traverseFolder(filePath); // 재귀적으로 하위 폴더 탐색
+      } else if (path.extname(file) === ".md") {
+        filePaths.push(filePath); // .md 파일인 경우 경로 추가
+      }
+    });
+  }
+
+  traverseFolder(folderPath); // 최상위 폴더부터 시작하여 모든 하위 폴더 탐색
+
   return filePaths;
 }
 
@@ -37,15 +52,14 @@ const saveVectorDatabaseIntoLocalPath = async () => {
 
   const textSplitter = new CharacterTextSplitter({
     separator: "\n#",
-    chunkSize: 50,
-    chunkOverlap: 3,
+    chunkSize: 102,
+    chunkOverlap: 2,
   });
 
   const splitedText = await textSplitter.splitDocuments(documents);
 
   //create vector database using documents and save to DATA_STORE_PATH
   const vectorStore = await HNSWLib.fromDocuments(splitedText, new OpenAIEmbeddings({ openAIApiKey }));
-  const DATA_STORE_PATH = "data_store";
   await vectorStore.save(DATA_STORE_PATH);
 };
 
