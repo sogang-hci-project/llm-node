@@ -1,20 +1,20 @@
-### Sogang-HCI project
+# Sogang-HCI project
 
-sogang HCI project 는 오디오 시스템을 활용해서 대화형 챗봇을 만드는 프로젝트입니다.
+sogang HCI project is project making Conversational Chatbot using audio system.
 
-### Why
+# Why
 
-유관 분야로 취직 또는 연구 등이 하고 싶어서요
+I want to get a job in a related field, do research, etc.
 
-### Goal
+# Goal
 
-ACM 에 게시해 논문 성과를 내는 것입니다
+Publish to ACM and get a paper published
 
-### Supported
+# Supported
 
-서강대학교 교수학습센터
-서강대학교 LINK 사업단
+Sogang University Teaching and Learning Center
+Sogang University LINK Center
 
-### Participants
+# Participants
 
 시원 대헌 창희 준기 동준
