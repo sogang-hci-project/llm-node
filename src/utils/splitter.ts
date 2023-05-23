@@ -1,6 +1,6 @@
 import fs from "fs";
 
-const filePath = `${__dirname}/../../picasso/wikipedia/guernica/paper/index.md`;
+const filePath = `${__dirname}/../static/markdown/vts.md`;
 const result = fs.readFileSync(filePath).toString();
 addHashesAndReturnLongestSentenceLength(result);
 

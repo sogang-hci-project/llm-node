@@ -20,15 +20,26 @@ const model = new ChatOpenAI({
 async function initializer() {
   const vectorStore = await loadVectorStore();
   const chain = ConversationalRetrievalQAChain.fromLLM(model, vectorStore.asRetriever());
-  const question = "who is picasso? play role of picasso and answer it";
+  const question = "what is vts sesssion?";
   const res = await chain.call({ question, chat_history: [] });
   console.log(res);
 
   // follow up question
-  // let chatHistory = question + res.text;
-  // const followUpRes = await chain.call({
-  //   question: "who supported sogang-hci?",
-  //   chat_history: chatHistory,
-  // });
+  let chatHistory = question + res.text;
+  const followUpRes = await chain.call({
+    question: `which country picasso was born? play role of picasso and answer it and please make two quiz within out context.
+    this quiz must use within contents you explain me so i can answer it if only i could remember them.
+    please use below format when you create quiz.
+    "QUIZ1":"quiz1 contents"
+    "QUIZ2":"quiz2 contensts"
+    `,
+    chat_history: chatHistory,
+  });
+  chatHistory = question + res.text + followUpRes.text;
+  const followUpRes2 = await chain.call({
+    question: `which country picasso was born? play role of picasso and answer it`,
+    chat_history: chatHistory,
+  });
+  console.log(followUpRes2);
 }
 initializer();
