@@ -4,9 +4,19 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json",
-    "start": "node dist/app.js",
-    "dev": "nodemon"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "sb": "storybook dev -p 6006",
+    "sb:build": "storybook build",
+    "lint": "tsc --noEmit && eslint src/**/*.ts{,x} --cache",
+    "lint:fix": "eslint src/**/*.ts{,x} --fix",
+    "prepare": "husky install"
+  },
+  "lint-staged": {
+    "**/*.{js,jsx,ts,tsx}": [
+      "npm run lint"
+    ]
   },
   "keywords": [],
   "author": "",
@@ -19,6 +29,8 @@
   },
   "devDependencies": {
     "@types/node": "^20.2.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^13.2.2",
     "nodemon": "^2.0.22",
     "ts-node": "^10.9.1",
     "tsc-alias": "^1.8.6",
