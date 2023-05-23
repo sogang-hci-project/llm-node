@@ -4,34 +4,39 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "sb": "storybook dev -p 6006",
-    "sb:build": "storybook build",
-    "lint": "tsc --noEmit && eslint src/**/*.ts{,x} --cache",
-    "lint:fix": "eslint src/**/*.ts{,x} --fix",
+    "build": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json",
+    "start": "node dist/app.js",
+    "dev": "nodemon",
+    "lint": "tsc --noEmit && eslint src/**/*.ts --cache",
+    "lint:fix": "eslint src/**/*.ts --fix",
     "prepare": "husky install"
   },
   "lint-staged": {
-    "**/*.{js,jsx,ts,tsx}": [
+    "**/*.{js,ts}": [
       "npm run lint"
     ]
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "dotenv": "^16.0.3",
     "hnswlib-node": "^1.4.2",
     "langchain": "^0.0.76",
-    "marked": "^5.0.2"
+    "marked": "^5.0.2",
+    "openai": "^3.2.1"
   },
   "devDependencies": {
     "@types/node": "^20.2.0",
+    "@typescript-eslint/eslint-plugin": "^5.59.7",
+    "@typescript-eslint/parser": "^5.59.7",
+    "eslint": "^8.41.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-prettier": "^4.2.1",
     "husky": "^8.0.3",
     "lint-staged": "^13.2.2",
     "nodemon": "^2.0.22",
+    "prettier": "^2.8.8",
     "ts-node": "^10.9.1",
     "tsc-alias": "^1.8.6",
     "tsconfig-paths": "^4.2.0",
