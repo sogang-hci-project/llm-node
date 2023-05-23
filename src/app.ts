@@ -20,7 +20,7 @@ const model = new ChatOpenAI({
 async function initializer() {
   const vectorStore = await loadVectorStore();
   const chain = ConversationalRetrievalQAChain.fromLLM(model, vectorStore.asRetriever());
-  const question = "who is participants of sogang hci?";
+  const question = "who is picasso? play role of picasso and answer it";
   const res = await chain.call({ question, chat_history: [] });
   console.log(res);
 
