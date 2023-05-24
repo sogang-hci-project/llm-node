@@ -4,14 +4,6 @@ src/static 폴더 아래에 있는 모든 .md 파일에 대해 vector db 를 생
 
 ```bash
 $npx ts-node -r tsconfig-paths/register src/save.local.db.ts
-Created a chunk of size 104, +
-which is longer than the specified 50
-Created a chunk of size 66, +
-which is longer than the specified 50
-Created a chunk of size 91, +
-which is longer than the specified 50
-Created a chunk of size 953, +
-which is longer than the specified 50
 ```
 
 개발 모드 시작

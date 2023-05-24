@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import { extname, join } from "path";
 import { CharacterTextSplitter } from "langchain/text_splitter";
 import { Document } from "langchain/document";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
@@ -52,10 +51,9 @@ const saveVectorDatabaseIntoLocalPath = async () => {
 
   const textSplitter = new CharacterTextSplitter({
     separator: "\n#",
-    chunkSize: 102,
+    chunkSize: 500,
     chunkOverlap: 2,
   });
-
   const splitedText = await textSplitter.splitDocuments(documents);
 
   //create vector database using documents and save to DATA_STORE_PATH
