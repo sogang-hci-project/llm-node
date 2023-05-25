@@ -8,9 +8,9 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { openAIApiKey } from "./constants/env";
 import { DATA_STORE_PATH } from "./constants";
 
-const folderPath = `${__dirname}/static/markdown`;
+export const folderPath = `${__dirname}/static/markdown`;
 
-function getAllMarkDownFiles(folderPath: string) {
+export function getAllMarkDownFiles(folderPath: string) {
   let filePaths: any = [];
 
   function traverseFolder(currentPath: string) {
@@ -36,9 +36,12 @@ function getAllMarkDownFiles(folderPath: string) {
 const filePaths = getAllMarkDownFiles(folderPath);
 
 /**
+ * only directly call this file,
+ * main function execute
  * Save vector db in DATA_STORE path for resuing vector db with static markdown files
+ *
  */
-const saveVectorDatabaseIntoLocalPath = async () => {
+async function main() {
   const documents: any = [];
   await Promise.all(
     filePaths.map(async (file: string) => {
@@ -50,8 +53,8 @@ const saveVectorDatabaseIntoLocalPath = async () => {
   );
 
   const textSplitter = new CharacterTextSplitter({
-    separator: "\n#",
-    chunkSize: 500,
+    separator: "##",
+    chunkSize: 212,
     chunkOverlap: 2,
   });
   const splitedText = await textSplitter.splitDocuments(documents);
@@ -59,6 +62,7 @@ const saveVectorDatabaseIntoLocalPath = async () => {
   //create vector database using documents and save to DATA_STORE_PATH
   const vectorStore = await HNSWLib.fromDocuments(splitedText, new OpenAIEmbeddings({ openAIApiKey }));
   await vectorStore.save(DATA_STORE_PATH);
-};
-
-saveVectorDatabaseIntoLocalPath();
+}
+if (require.main === module) {
+  main();
+}

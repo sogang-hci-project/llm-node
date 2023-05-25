@@ -1,45 +1,35 @@
-import { ConversationalRetrievalQAChain } from "langchain/chains";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import express, { Request, Response, NextFunction } from "express";
+import morgan from "morgan";
 
-import loadVectorStore from "./load.local.db";
-import { openAIApiKey } from "./constants";
+import { isProd } from "~/constants";
+import { LLMRouter } from "~/routers";
 
-const model = new ChatOpenAI({
-  temperature: 0.9,
-  openAIApiKey,
-  streaming: true,
-  callbacks: [
-    {
-      handleLLMNewToken(token: string) {
-        process.stdout.write(token);
-      },
-    },
-  ],
+const app = express();
+
+app.set("port", 5000);
+
+if (isProd) {
+  app.use(morgan("combined"));
+} else {
+  app.use(morgan("dev"));
+}
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.post("/talke", (req, res) => {
+  const { user } = req.body;
+  if (!user) return res.status(400).json({ message: "inccorect data" });
+  res.send("connect success");
 });
 
-async function initializer() {
-  const vectorStore = await loadVectorStore();
-  const chain = ConversationalRetrievalQAChain.fromLLM(model, vectorStore.asRetriever());
-  const question = "what is vts sesssion?";
-  const res = await chain.call({ question, chat_history: [] });
-  console.log(res);
+app.use("/api/v1", LLMRouter);
+app.use((error: any, req: Request, res: Response, next: NextFunction) => {
+  console.error(error);
+  res.status(210).json({ message: "LLM 서버 내부 오류가 발생했습니다.", error });
+  next();
+});
 
-  // follow up question
-  let chatHistory = question + res.text;
-  const followUpRes = await chain.call({
-    question: `which country picasso was born? play role of picasso and answer it and please make two quiz within out context.
-    this quiz must use within contents you explain me so i can answer it if only i could remember them.
-    please use below format when you create quiz.
-    "QUIZ1":"quiz1 contents"
-    "QUIZ2":"quiz2 contensts"
-    `,
-    chat_history: chatHistory,
-  });
-  chatHistory = question + res.text + followUpRes.text;
-  const followUpRes2 = await chain.call({
-    question: `which country picasso was born? play role of picasso and answer it`,
-    chat_history: chatHistory,
-  });
-  console.log(followUpRes2);
-}
-initializer();
+app.listen(app.get("port"), () => {
+  console.log(`listening on http://localhost:${app.get("port")}`);
+});
