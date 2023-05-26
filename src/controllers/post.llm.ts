@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 
-import { chainInitializer, redisClient } from "~/lib";
+import { chainInitializer, dbTemplate, redisClient } from "~/lib";
 
 export const handleChat = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -9,8 +9,11 @@ export const handleChat = async (req: Request, res: Response, next: NextFunction
     let context = await redisClient.get(sessionId);
     if (!context) context = `context:`;
     const chain = await chainInitializer({ free: false });
-    const question = `${user}`;
-    const result = await chain.call({ question, chat_history: [context] });
+    const query = `${dbTemplate}\n${context}\n${user}`;
+    // const result = await chain.call({ question, chat_history: [context] });
+    const result = await chain.call({
+      query,
+    });
     console.log("\n🔥🔥🔥 result", result);
     const { text } = result;
     res.status(200).json({ message: "llm model router test", text });
@@ -18,7 +21,7 @@ export const handleChat = async (req: Request, res: Response, next: NextFunction
     next(e);
   }
 };
-console.log("a");
+
 export const handleChatWithFree = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chain = await chainInitializer({ free: true });
