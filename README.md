@@ -11,3 +11,5 @@ $npx ts-node -r tsconfig-paths/register src/save.local.db.ts
 ```bash
 $npm run dev
 ```
+
+splitter 에 있는

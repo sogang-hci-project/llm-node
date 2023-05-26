@@ -36,11 +36,12 @@ export function getAllMarkDownFiles(folderPath: string) {
 const filePaths = getAllMarkDownFiles(folderPath);
 
 /**
+ * const filePaths ['path1','path2',...]
  * only directly call this file,
  * main function execute
  * Save vector db in DATA_STORE path for resuing vector db with static markdown files
- *
  */
+
 async function main() {
   const documents: any = [];
   await Promise.all(

@@ -1,12 +1,15 @@
 import { ConversationalRetrievalQAChain } from "langchain/chains";
 import { ChatOpenAI } from "langchain/chat_models/openai";
+import { LLMChain } from "langchain/chains";
+import { PromptTemplate } from "langchain/prompts";
 
 import { openAIApiKey } from "~/constants";
 import loadVectorStore from "~/load.local.db";
 
 export const model = new ChatOpenAI({
-  temperature: 0.9,
+  temperature: 0,
   openAIApiKey,
+  verbose: true,
   streaming: true,
   callbacks: [
     {
@@ -17,34 +20,35 @@ export const model = new ChatOpenAI({
   ],
 });
 
+const template = `This is a role-playing situation. Put yourself in the shoes of the painter Pablo Picasso. Speak once and wait for the next answer.
+I've put all of our previous conversations in a place called "context:", so if there's something you don't recognize, please refer to that and answer. 
+{user}`;
+
+const dbTemplate = `This is a role-playing situation and you're going to answer as the painter Pablo Picasso.
+"context:" has a history of previous conversations,
+so if there's something you don't know, use the "context:" if you don't understand something.
+This conversation is about a painting called Guernica by Pablo Picasso.
+Summarize and restate what the user said, then create a one quiz related to the answer, and wait for the next user to answer.
+{question}`;
+
+// const dbTemplate = `This is a role-playing situation and you're going to answer as the painter Pablo Picasso. "context:" has a history of previous conversations, so if there's something you don't know, use the "context:" if you don't understand something. This conversation is about a painting called Guernica by Pablo Picasso. Summarize and restate what the user said, and wait for the next user to answer.
+// {question}`;
+
+const dbResponseTemplate = `
+??
+`;
+
 export async function chainInitializer({ free }: { free: boolean }) {
   const vectorStore = await loadVectorStore();
   let chain;
   if (free) {
-    chain = null;
+    const prompt = new PromptTemplate({
+      template: template,
+      inputVariables: ["user"],
+    });
+    chain = new LLMChain({ llm: model, prompt: prompt });
   } else {
     chain = ConversationalRetrievalQAChain.fromLLM(model, vectorStore.asRetriever());
   }
-
   return chain;
-  // const question = "what is vts sesssion?";
-  // const res = await chain.call({ question, chat_history: [] });
-  // console.log(res);
-
-  // // follow up question
-  // let chatHistory = question + res.text;
-  // const followUpRes = await chain.call({
-  //   question: `which country picasso was born? play role of picasso and answer it and please make two quiz within out context.
-  //   this quiz must use contents you explain me so i can answer it if only i could remember them.
-  //   please use below format when you create quiz.
-  //   "QUIZ1":"quiz1 contents"
-  //   "QUIZ2":"quiz2 contensts"
-  //   `,
-  //   chat_history: chatHistory,
-  // });
-  // chatHistory = question + res.text + followUpRes.text;
-  // const followUpRes2 = await chain.call({
-  //   question: `which country picasso was born? play role of picasso and answer it`,
-  //   chat_history: chatHistory,
-  // });
 }

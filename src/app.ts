@@ -17,12 +17,6 @@ if (isProd) {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.post("/talke", (req, res) => {
-  const { user } = req.body;
-  if (!user) return res.status(400).json({ message: "inccorect data" });
-  res.send("connect success");
-});
-
 app.use("/api/v1", LLMRouter);
 app.use((error: any, req: Request, res: Response, next: NextFunction) => {
   console.error(error);
