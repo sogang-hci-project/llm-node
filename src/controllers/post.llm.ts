@@ -18,7 +18,7 @@ export const handleChat = async (req: Request, res: Response, next: NextFunction
     next(e);
   }
 };
-
+console.log("a");
 export const handleChatWithFree = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chain = await chainInitializer({ free: true });
