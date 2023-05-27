@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getAllMarkDownFiles = exports.folderPath = void 0;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const text_splitter_1 = require("langchain/text_splitter");
@@ -20,7 +21,7 @@ const hnswlib_1 = require("langchain/vectorstores/hnswlib");
 const openai_1 = require("langchain/embeddings/openai");
 const env_1 = require("./constants/env");
 const constants_1 = require("./constants");
-const folderPath = `${__dirname}/static/markdown`;
+exports.folderPath = `${__dirname}/static/markdown`;
 function getAllMarkDownFiles(folderPath) {
     let filePaths = [];
     function traverseFolder(currentPath) {
@@ -39,26 +40,34 @@ function getAllMarkDownFiles(folderPath) {
     traverseFolder(folderPath); // 최상위 폴더부터 시작하여 모든 하위 폴더 탐색
     return filePaths;
 }
-const filePaths = getAllMarkDownFiles(folderPath);
+exports.getAllMarkDownFiles = getAllMarkDownFiles;
+const filePaths = getAllMarkDownFiles(exports.folderPath);
 /**
+ * const filePaths ['path1','path2',...]
+ * only directly call this file,
+ * main function execute
  * Save vector db in DATA_STORE path for resuing vector db with static markdown files
  */
-const saveVectorDatabaseIntoLocalPath = () => __awaiter(void 0, void 0, void 0, function* () {
-    const documents = [];
-    yield Promise.all(filePaths.map((file) => __awaiter(void 0, void 0, void 0, function* () {
-        const text = fs_1.default.readFileSync(file, "utf-8");
-        const regex = /\/llm-node(.*)/;
-        const relativePath = file.match(regex)[1];
-        documents.push(new document_1.Document({ pageContent: text, metadata: { source: relativePath } }));
-    })));
-    const textSplitter = new text_splitter_1.CharacterTextSplitter({
-        separator: "\n#",
-        chunkSize: 102,
-        chunkOverlap: 2,
+function main() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const documents = [];
+        yield Promise.all(filePaths.map((file) => __awaiter(this, void 0, void 0, function* () {
+            const text = fs_1.default.readFileSync(file, "utf-8");
+            const regex = /\/llm-node(.*)/;
+            const relativePath = file.match(regex)[1];
+            documents.push(new document_1.Document({ pageContent: text, metadata: { source: relativePath } }));
+        })));
+        const textSplitter = new text_splitter_1.CharacterTextSplitter({
+            separator: "##",
+            chunkSize: 212,
+            chunkOverlap: 2,
+        });
+        const splitedText = yield textSplitter.splitDocuments(documents);
+        //create vector database using documents and save to DATA_STORE_PATH
+        const vectorStore = yield hnswlib_1.HNSWLib.fromDocuments(splitedText, new openai_1.OpenAIEmbeddings({ openAIApiKey: env_1.openAIApiKey }));
+        yield vectorStore.save(constants_1.DATA_STORE_PATH);
     });
-    const splitedText = yield textSplitter.splitDocuments(documents);
-    //create vector database using documents and save to DATA_STORE_PATH
-    const vectorStore = yield hnswlib_1.HNSWLib.fromDocuments(splitedText, new openai_1.OpenAIEmbeddings({ openAIApiKey: env_1.openAIApiKey }));
-    yield vectorStore.save(constants_1.DATA_STORE_PATH);
-});
-saveVectorDatabaseIntoLocalPath();
+}
+if (require.main === module) {
+    main();
+}
