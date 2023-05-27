@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: "hci-node",
+      name: "llm-node",
       script: "dist/app.js",
       instances: 1,
       exec_mode: "cluster",
