@@ -17,6 +17,10 @@ if (isProd) {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.get("/", (req: any, res: any, next: any) => {
+  res.send("llm 서버 연결 성공");
+});
+
 app.use("/api/v1", LLMRouter);
 app.use((error: any, req: Request, res: Response, next: NextFunction) => {
   console.error(error);
