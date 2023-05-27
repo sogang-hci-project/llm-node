@@ -4,5 +4,8 @@
     "es6": true
   },
   "extends": ["eslint:recommended", "plugin:prettier/recommended"],
-  "parser": "@typescript-eslint/parser"
+  "parser": "@typescript-eslint/parser",
+  "rules": {
+    "no-unused-vars": ["warn"]
+  }
 }
