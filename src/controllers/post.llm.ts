@@ -1,24 +1,31 @@
 import { NextFunction, Request, Response } from "express";
 
-import { chainInitializer, dbTemplate, dbTemplateNoQuiz, redisClient } from "~/lib";
+import { chainInitializer, dbTemplate, dbTemplateDone, dbTemplateNoQuiz, dbTemplateQA, redisClient } from "~/lib";
 
 export const handleChat = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { user, sessionId, additional } = req.body;
+    const { user, sessionId, additional, done } = req.body;
 
     if (!user || !sessionId) return res.status(400).json({ message: "incorrect LLM data" });
-    let context = await redisClient.get(sessionId);
-    if (!context) context = `context:`;
-    const chain = await chainInitializer({ free: false });
-    context += `\n${user}`;
-    const query = `${additional ? dbTemplate : dbTemplateNoQuiz}\n${context}`;
+    let context = JSON.parse(await redisClient.get(sessionId));
+    if (!context) context = [];
+    const chat = { id: context.length + 1, human: user, ai: "" };
+    context.push(chat);
 
+    let query;
+    if (done) {
+      query = `${additional ? dbTemplateQA : dbTemplateDone}\n${JSON.stringify(context)}`;
+    } else {
+      query = `${additional ? dbTemplate : dbTemplateNoQuiz}\n${JSON.stringify(context)}`;
+    }
+
+    const chain = await chainInitializer({ free: false });
     const result = await chain.call({
       query,
     });
     const { text } = result;
-    context += `\n${text}`;
-    redisClient.set(sessionId, context);
+    context[context.length - 1]["ai"] = text;
+    redisClient.set(sessionId, JSON.stringify(context));
 
     // 정규식을 사용하여 Answer: 뒤에 있는 문장 추출
     const answerRegex = /Answer:\s*(.*)/;
@@ -29,10 +36,6 @@ export const handleChat = async (req: Request, res: Response, next: NextFunction
     const quizRegex = /Quiz:\s*(.*)/;
     const quizMatch = text.match(quizRegex);
     const quiz = quizMatch ? quizMatch[1] : "quiz none";
-
-    console.log("\n🔥", text);
-    console.log("\n🔥", answer);
-    console.log("\n🔥", quiz);
 
     res.status(200).json({ message: "llm model router test", text, answer, quiz });
   } catch (e) {
@@ -50,14 +53,14 @@ export const handleChatWithFree = async (req: Request, res: Response, next: Next
 
     let chat = { id: context.length + 1, human: user, ai: "" };
     context.push(chat);
-    console.log("콘텍스트", context);
 
     const result = await chain.call({ user: JSON.stringify(context) });
     const { text } = result;
+
     context[context.length - 1]["ai"] = text;
-    console.log("콘텍스트2", context);
+
     redisClient.set(sessionId, JSON.stringify(context));
-    res.status(200).json({ message: "테스트 중", text });
+    res.status(200).json({ message: "Free model connect success", text });
   } catch (e) {
     next(e);
   }
