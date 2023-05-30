@@ -27,15 +27,15 @@ export const handleChat = async (req: Request, res: Response, next: NextFunction
     context[context.length - 1]["ai"] = text;
     redisClient.set(sessionID, JSON.stringify(context));
 
-    // 정규식을 사용하여 Answer: 뒤에 있는 문장 추출
-    const answerRegex = /Answer:\s*(.*)/;
-    const answerMatch = text.match(answerRegex);
-    const answer = answerMatch ? answerMatch[1] : "answer none";
+    // 정규식을 사용하여 Response: 뒤에 있는 문장 추출
+    const responseRegex = /Response:\s*(.*)/;
+    const responseMatch = text.match(responseRegex);
+    const answer = responseMatch ? responseMatch[1] : "";
 
-    // 정규식을 사용하여 Quiz: 뒤에 있는 문장 추출
-    const quizRegex = /Quiz:\s*(.*)/;
-    const quizMatch = text.match(quizRegex);
-    const quiz = quizMatch ? quizMatch[1] : "quiz none";
+    // 정규식을 사용하여 Question: 뒤에 있는 문장 추출
+    const questionRegex = /Question:\s*(.*)/;
+    const questionMatch = text.match(questionRegex);
+    const quiz = questionMatch ? questionMatch[1] : "";
 
     res.status(200).json({ message: "llm model router test", text, answer, quiz });
   } catch (e) {
