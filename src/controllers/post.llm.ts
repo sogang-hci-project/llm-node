@@ -11,12 +11,15 @@ export const handleChat = async (req: Request, res: Response, next: NextFunction
     if (!context) context = [];
     const chat = { id: context.length + 1, human: user, ai: "" };
     context.push(chat);
+    const modifiedContext = context.map(({ human, ai, id }: { human: string; ai: string; id: number }) => {
+      return { id, user: human, picasso: ai };
+    });
 
     let query;
     if (done) {
-      query = `${additional ? dbTemplateQA : dbTemplateDone}\n${JSON.stringify(context)}`;
+      query = `${additional ? dbTemplateQA : dbTemplateDone}\n${JSON.stringify(modifiedContext)}`;
     } else {
-      query = `${additional ? dbTemplate : dbTemplateNoQuiz}\n${JSON.stringify(context)}`;
+      query = `${additional ? dbTemplate : dbTemplateNoQuiz}\n${JSON.stringify(modifiedContext)}`;
     }
 
     const chain = await chainInitializer({ free: false });
