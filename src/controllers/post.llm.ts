@@ -11,12 +11,15 @@ export const handleChat = async (req: Request, res: Response, next: NextFunction
     if (!context) context = [];
     const chat = { id: context.length + 1, human: user, ai: "" };
     context.push(chat);
+    const modifiedContext = context.map(({ human, ai, id }: { human: string; ai: string; id: number }) => {
+      return { id, user: human, picasso: ai };
+    });
 
     let query;
     if (done) {
-      query = `${additional ? dbTemplateQA : dbTemplateDone}\n${JSON.stringify(context)}`;
+      query = `${additional ? dbTemplateQA : dbTemplateDone}\n${JSON.stringify(modifiedContext)}`;
     } else {
-      query = `${additional ? dbTemplate : dbTemplateNoQuiz}\n${JSON.stringify(context)}`;
+      query = `${additional ? dbTemplate : dbTemplateNoQuiz}\n${JSON.stringify(modifiedContext)}`;
     }
 
     const chain = await chainInitializer({ free: false });
@@ -27,17 +30,22 @@ export const handleChat = async (req: Request, res: Response, next: NextFunction
     context[context.length - 1]["ai"] = text;
     await redisClient.set(sessionID, JSON.stringify(context));
 
-    // 정규식을 사용하여 Answer: 뒤에 있는 문장 추출
-    const answerRegex = /Answer:\s*(.*)/;
-    const answerMatch = text.match(answerRegex);
-    const answer = answerMatch && answerMatch[1];
 
-    // 정규식을 사용하여 Quiz: 뒤에 있는 문장 추출
-    const quizRegex = /Quiz:\s*(.*)/;
-    const quizMatch = text.match(quizRegex);
-    const quiz = quizMatch && quizMatch[1];
+    // 정규식을 사용하여 Pablo Picasso: 가 포함된 경우 이를 제거
+    const filteredText = text.replace(/Pablo Picasso:/, "");
 
-    res.status(200).json({ message: "llm model router test", text, answer, quiz });
+    // 정규식을 사용하여 Response: 뒤에 있는 문장 추출
+    const responseRegex = /Response:\s*(.*)/;
+    const responseMatch = filteredText.match(responseRegex);
+    const answer = responseMatch && responseMatch[1]
+
+    // 정규식을 사용하여 Question: 뒤에 있는 문장 추출
+    const questionRegex = /Question:\s*(.*)/;
+    const questionMatch = filteredText.match(questionRegex);
+    const quiz = questionMatch && questionMatch[1] 
+
+
+    res.status(200).json({ message: "llm model router test", filteredText, answer, quiz });
   } catch (e) {
     next(e);
   }
