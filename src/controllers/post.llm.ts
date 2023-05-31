@@ -30,20 +30,18 @@ export const handleChat = async (req: Request, res: Response, next: NextFunction
     context[context.length - 1]["ai"] = text;
     await redisClient.set(sessionID, JSON.stringify(context));
 
-
     // 정규식을 사용하여 Pablo Picasso: 가 포함된 경우 이를 제거
     const filteredText = text.replace(/Pablo Picasso:/, "");
 
     // 정규식을 사용하여 Response: 뒤에 있는 문장 추출
     const responseRegex = /Response:\s*(.*)/;
     const responseMatch = filteredText.match(responseRegex);
-    const answer = responseMatch && responseMatch[1]
+    const answer = responseMatch && responseMatch[1];
 
     // 정규식을 사용하여 Question: 뒤에 있는 문장 추출
     const questionRegex = /Question:\s*(.*)/;
     const questionMatch = filteredText.match(questionRegex);
-    const quiz = questionMatch && questionMatch[1] 
-
+    const quiz = questionMatch && questionMatch[1];
 
     res.status(200).json({ message: "llm model router test", filteredText, answer, quiz });
   } catch (e) {
