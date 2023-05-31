@@ -25,17 +25,17 @@ export const handleChat = async (req: Request, res: Response, next: NextFunction
     });
     const { text } = result;
     context[context.length - 1]["ai"] = text;
-    redisClient.set(sessionID, JSON.stringify(context));
+    await redisClient.set(sessionID, JSON.stringify(context));
 
     // 정규식을 사용하여 Answer: 뒤에 있는 문장 추출
     const answerRegex = /Answer:\s*(.*)/;
     const answerMatch = text.match(answerRegex);
-    const answer = answerMatch ? answerMatch[1] : "answer none";
+    const answer = answerMatch && answerMatch[1];
 
     // 정규식을 사용하여 Quiz: 뒤에 있는 문장 추출
     const quizRegex = /Quiz:\s*(.*)/;
     const quizMatch = text.match(quizRegex);
-    const quiz = quizMatch ? quizMatch[1] : "quiz none";
+    const quiz = quizMatch && quizMatch[1];
 
     res.status(200).json({ message: "llm model router test", text, answer, quiz });
   } catch (e) {
@@ -59,7 +59,7 @@ export const handleChatWithFree = async (req: Request, res: Response, next: Next
 
     context[context.length - 1]["ai"] = text;
 
-    redisClient.set(sessionID, JSON.stringify(context));
+    await redisClient.set(sessionID, JSON.stringify(context));
     res.status(200).json({ message: "Free model connect success", text });
   } catch (e) {
     next(e);
