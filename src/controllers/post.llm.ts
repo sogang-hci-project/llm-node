@@ -21,9 +21,8 @@ export const handleChat = async (req: Request, res: Response, next: NextFunction
     const { user, sessionID, additional, done } = req.body;
 
     if (!user || !sessionID) return res.status(400).json({ message: "incorrect LLM data" });
-    let context = JSON.parse(await redisClient.get(sessionID));
-    if (!context) context = [];
-    let chat = { id: context.length + 1, human: user, ai: "" };
+    const context = JSON.parse(await redisClient.get(sessionID)) || [];
+    const chat = { id: context.length + 1, human: user, ai: "" };
     context.push(chat);
     const dialogueContext = context.map(mapDialogue).join("\n");
 
@@ -63,10 +62,9 @@ export const handleChatWithFree = async (req: Request, res: Response, next: Next
     const chain = await chainInitializer({ free: true });
     const { user, sessionID } = req.body;
     if (!user || !sessionID) return res.status(400).json({ message: "incorrect LLM data" });
-    let context = JSON.parse(await redisClient.get(sessionID));
-    if (!context) context = [];
 
-    let chat = { id: context.length + 1, human: user, ai: "" };
+    const context = JSON.parse(await redisClient.get(sessionID)) || [];
+    const chat = { id: context.length + 1, human: user, ai: "" };
     context.push(chat);
 
     const dialogueContext = context.map(mapDialogue).join(" \n ");
