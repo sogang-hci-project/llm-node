@@ -70,7 +70,6 @@ export const handleChatWithFree = async (req: Request, res: Response, next: Next
     context.push(chat);
 
     const dialogueContext = context.map(mapDialogue).join(" \n ");
-    console.log("dialogue is :", dialogueContext);
 
     const result = await chain.call({ message: "[DIALOGUE]" + dialogueContext + "\n Pablo Picasso:" });
     const { text } = result;
