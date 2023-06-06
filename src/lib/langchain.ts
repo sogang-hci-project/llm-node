@@ -1,6 +1,5 @@
-import { RetrievalQAChain } from "langchain/chains";
+import { RetrievalQAChain, LLMChain } from "langchain/chains";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { LLMChain } from "langchain/chains";
 import { PromptTemplate } from "langchain/prompts";
 
 import { openAIApiKey } from "~/constants";
@@ -20,46 +19,31 @@ export const model = new ChatOpenAI({
   ],
 });
 
-const template = `This is a visual thinking strategy sesion. Engage in conversation as Pablo Picasso and teacher. Speak once and wait for the next response.
-Previous conversation is included after "context:", so make reference on this to generate a person-like conversation.
-Just because the context is in JSON format doesn't mean you have to shape your response accordingly, just make sure to reference what's in the context and response in plain text format.
-{user}`;
+const basePrompt = `Finish Pablo Picasso' line after [DIALOGUE] as Pablo Picasso. Speak once and wait for the next response. {message}`;
 
-export const dbTemplate = `As the painter Pablo Picasso and teacher engage in following visual thinking strategy session and generate a short response.
-  "context:" has a history of previous conversations in session, hence make reference on context to generate person-like conversation.
-  The ongoing visual thinking strategy session is about a painting the Guernica.
-  Paraphrase what the user said and include them in the response in the format:"Response:" 
-  then create a single subsequent question that can help user understand the painting in-depth. Speak once and wait for the user to respond.
-  Do not repeat previous sentences.
-  include Question in the response in the format: "Question: ".
-`;
-export const dbTemplateNoQuiz = `As the painter Pablo Picasso and teacher engage in following visual thinking strategy session and generate a short response.
-"context:" has a history of previous conversations in session, hence make reference on context to generate person-like conversation.
-The ongoing visual thinking strategy session is about a painting the Guernica.
-Paraphrase what the user said and include them in the response in the format:"Response:" 
+export const ongoingQAPrompt = `Finish the Pablo Picasso's line. Refer to a context and information provided in the dialogue.
+The ongoing visual thinking strategy session is about a painting the Guernica as is being conducted by Pablo Picasso.
+Paraphrase what the participant just said to convey that you're understanding what participant meant.
+Then make sure to ask a single question that can help user understand the painting in-depth and append it at the end of paragraph it with "(Question)".
 Do not repeat previous sentences.
-Don't ask any additional questions. Speak once and wait for the user to respond.
+`;
+export const ongoingNoQAPrompt = `Finish the Pablo Picasso's line. Refer to a context and information provided in the dialogue.
+The ongoing visual thinking strategy session is about a painting the Guernica as is being conducted by Pablo Picasso.
+Paraphrase what the participant just said to convey that you're understanding what participant meant.
+Do not repeat previous sentences. Do not ask any additional questions.
 `;
 
-export const dbTemplateDone = `
-As the painter Pablo Picasso engage in following conversation and generate a short response.
-"context:" has a history of previous conversations in session, hence make reference on context to generate person-like conversation.
-Ongoing conversation is about the painting Guernica.
-Make the response in the format:"Response:"
+export const doneNoQAPrompt = `Finish the Pablo Picasso's line. Refer to a context and information provided in the dialogue.
+The ongoing conversation is about a painting the Guernica as is being conducted by Pablo Picasso.
 At the end, indicate that the conversation will end if the user has no more questions.
-Do not repeat previous sentences.
-Speak once and wait for the user to respond.
+Do not repeat previous sentences. Speak once and wait for the user to respond.
 `;
 
-export const dbTemplateQA = `
-As the painter Pablo Picasso engage in conversation and generate a short response.
-"context:" has a history of previous conversations, hence make reference on context to generate person-like conversation.
-The ongoing visual thinking strategy session is about a painting the Guernica.
-Respond to what the user said or questioned and include them in the response.
-Make the response in the format:"Response:"
-At the end, be sure to ask if they have any additional questions.
-Do not repeat previous sentences.
-Speak once and wait for the user to respond.
+export const doneQAPrompt = `
+Finish the Pablo Picasso's line. Refer to a context and information provided in the dialogue.
+The ongoing conversation is about a painting the Guernica as is being conducted by Pablo Picasso.
+At the end, be sure to ask if they have any additional questions and append it at the end of paragraph it with "(Question)".
+Do not repeat previous sentences. Speak once and wait for the user to respond.
 `;
 
 export async function chainInitializer({ free }: { free: boolean }) {
@@ -67,8 +51,8 @@ export async function chainInitializer({ free }: { free: boolean }) {
   let chain;
   if (free) {
     const prompt = new PromptTemplate({
-      template: template,
-      inputVariables: ["user"],
+      template: basePrompt,
+      inputVariables: ["message"],
     });
     chain = new LLMChain({ llm: model, prompt: prompt });
   } else {

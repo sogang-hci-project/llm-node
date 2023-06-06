@@ -1,6 +1,20 @@
 import { NextFunction, Request, Response } from "express";
 
-import { chainInitializer, dbTemplate, dbTemplateDone, dbTemplateNoQuiz, dbTemplateQA, redisClient } from "~/lib";
+import { chainInitializer, ongoingQAPrompt, doneNoQAPrompt, ongoingNoQAPrompt, doneQAPrompt, redisClient } from "~/lib";
+
+interface IMapDialogue {
+  human: string;
+  ai: string;
+  id: number;
+}
+
+function mapDialogue({ human, ai, id }: IMapDialogue) {
+  const dialogueBlock = [];
+  if (human.length !== 0) dialogueBlock.push(`Participant: ${human}`);
+  if (ai.length !== 0) dialogueBlock.push(`Pablo Picasso: ${ai}`);
+
+  return dialogueBlock.join("\n");
+}
 
 export const handleChat = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -9,17 +23,19 @@ export const handleChat = async (req: Request, res: Response, next: NextFunction
     if (!user || !sessionID) return res.status(400).json({ message: "incorrect LLM data" });
     let context = JSON.parse(await redisClient.get(sessionID));
     if (!context) context = [];
-    const chat = { id: context.length + 1, human: user, ai: "" };
+    let chat = { id: context.length + 1, human: user, ai: "" };
     context.push(chat);
-    const modifiedContext = context.map(({ human, ai, id }: { human: string; ai: string; id: number }) => {
-      return { id, user: human, picasso: ai };
-    });
+    const dialogueContext = context.map(mapDialogue).join("\n");
 
     let query;
     if (done) {
-      query = `${additional ? dbTemplateQA : dbTemplateDone}\n${JSON.stringify(modifiedContext)}`;
+      query = `[INSTRUCTION]: ${
+        additional ? doneQAPrompt : doneNoQAPrompt
+      } \n [DIALOGUE]: \n ${dialogueContext} \n Pablo Picasso:`;
     } else {
-      query = `${additional ? dbTemplate : dbTemplateNoQuiz}\n${JSON.stringify(modifiedContext)}`;
+      query = `[INSTRUCTION]: ${
+        additional ? ongoingQAPrompt : ongoingNoQAPrompt
+      } \n [DIALOGUE]: \n ${dialogueContext} \n Pablo Picasso:`;
     }
 
     const chain = await chainInitializer({ free: false });
@@ -28,22 +44,15 @@ export const handleChat = async (req: Request, res: Response, next: NextFunction
     });
     const { text } = result;
     context[context.length - 1]["ai"] = text;
+
     await redisClient.set(sessionID, JSON.stringify(context));
 
-    // 정규식을 사용하여 Pablo Picasso: 가 포함된 경우 이를 제거
-    const filteredText = text.replace(/Pablo Picasso:/, "");
+    // split() method를 사용하여 문장 분리
+    const delimiter = "(Question)";
+    const textParts = text.split(delimiter);
+    const [answer, quiz] = textParts.map((part: string) => part.trim());
 
-    // 정규식을 사용하여 Response: 뒤에 있는 문장 추출
-    const responseRegex = /Response:\s*(.*)/;
-    const responseMatch = filteredText.match(responseRegex);
-    const answer = responseMatch && responseMatch[1];
-
-    // 정규식을 사용하여 Question: 뒤에 있는 문장 추출
-    const questionRegex = /Question:\s*(.*)/;
-    const questionMatch = filteredText.match(questionRegex);
-    const quiz = questionMatch && questionMatch[1];
-
-    res.status(200).json({ message: "llm model router test", filteredText, answer, quiz });
+    res.status(200).json({ message: "Structured Model Success", text: "", answer, quiz });
   } catch (e) {
     next(e);
   }
@@ -60,13 +69,16 @@ export const handleChatWithFree = async (req: Request, res: Response, next: Next
     let chat = { id: context.length + 1, human: user, ai: "" };
     context.push(chat);
 
-    const result = await chain.call({ user: JSON.stringify(context) });
+    const dialogueContext = context.map(mapDialogue).join(" \n ");
+    console.log("dialogue is :", dialogueContext);
+
+    const result = await chain.call({ message: "[DIALOGUE]" + dialogueContext + "\n Pablo Picasso:" });
     const { text } = result;
 
     context[context.length - 1]["ai"] = text;
 
     await redisClient.set(sessionID, JSON.stringify(context));
-    res.status(200).json({ message: "Free model connect success", text });
+    res.status(200).json({ message: "Free Model Success", text });
   } catch (e) {
     next(e);
   }
