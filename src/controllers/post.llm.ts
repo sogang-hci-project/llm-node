@@ -47,8 +47,9 @@ export const handleChat = async (req: Request, res: Response, next: NextFunction
     await redisClient.set(sessionID, JSON.stringify(context));
 
     // split() method를 사용하여 문장 분리
+    const filteredText = text.replace("(Paraphrase)", "");
     const delimiter = "(Question)";
-    const textParts = text.split(delimiter);
+    const textParts = filteredText.split(delimiter);
     const [answer, quiz] = textParts.map((part: string) => part.trim());
 
     res.status(200).json({ message: "Structured Model Success", text: "", answer, quiz });
