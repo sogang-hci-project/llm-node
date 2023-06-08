@@ -28,13 +28,13 @@ export const handleChat = async (req: Request, res: Response, next: NextFunction
 
     let query;
     if (done) {
-      query = `[INSTRUCTION]: ${
+      query = `[DIALOGUE]: \n ${dialogueContext} \n [INSTRUCTION]: ${
         additional ? doneQAPrompt : doneNoQAPrompt
-      } \n [DIALOGUE]: \n ${dialogueContext} \n Pablo Picasso:`;
+      } \n [LINE]: Pablo Picasso:`;
     } else {
-      query = `[INSTRUCTION]: ${
+      query = `[DIALOGUE]: \n ${dialogueContext} \n [INSTRUCTION]: ${
         additional ? ongoingQAPrompt : ongoingNoQAPrompt
-      } \n [DIALOGUE]: \n ${dialogueContext} \n Pablo Picasso:`;
+      } \n [LINE]: Pablo Picasso:`;
     }
 
     const chain = await chainInitializer({ free: false });
