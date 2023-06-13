@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import { extname, join } from "path";
 import { CharacterTextSplitter } from "langchain/text_splitter";
 import { Document } from "langchain/document";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
@@ -9,9 +8,9 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { openAIApiKey } from "./constants/env";
 import { DATA_STORE_PATH } from "./constants";
 
-const folderPath = `${__dirname}/static/markdown`;
+export const folderPath = `${__dirname}/static/markdown`;
 
-function getAllMarkDownFiles(folderPath: string) {
+export function getAllMarkDownFiles(folderPath: string) {
   let filePaths: any = [];
 
   function traverseFolder(currentPath: string) {
@@ -37,30 +36,36 @@ function getAllMarkDownFiles(folderPath: string) {
 const filePaths = getAllMarkDownFiles(folderPath);
 
 /**
+ * const filePaths ['path1','path2',...]
+ * only directly call this file,
+ * main function execute
  * Save vector db in DATA_STORE path for resuing vector db with static markdown files
  */
-const saveVectorDatabaseIntoLocalPath = async () => {
+
+async function main() {
   const documents: any = [];
   await Promise.all(
     filePaths.map(async (file: string) => {
       const text = fs.readFileSync(file, "utf-8");
       const regex = /\/llm-node(.*)/;
+      console.log(file);
       const relativePath = file.match(regex)[1];
+      // console.log(relativePath);
       documents.push(new Document({ pageContent: text, metadata: { source: relativePath } }));
     })
   );
 
   const textSplitter = new CharacterTextSplitter({
-    separator: "\n#",
-    chunkSize: 102,
+    separator: "##",
+    chunkSize: 212,
     chunkOverlap: 2,
   });
-
   const splitedText = await textSplitter.splitDocuments(documents);
 
   //create vector database using documents and save to DATA_STORE_PATH
   const vectorStore = await HNSWLib.fromDocuments(splitedText, new OpenAIEmbeddings({ openAIApiKey }));
   await vectorStore.save(DATA_STORE_PATH);
-};
-
-saveVectorDatabaseIntoLocalPath();
+}
+if (require.main === module) {
+  main();
+}
