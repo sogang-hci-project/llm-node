@@ -48,7 +48,9 @@ async function main() {
     filePaths.map(async (file: string) => {
       const text = fs.readFileSync(file, "utf-8");
       const regex = /\/llm-node(.*)/;
+      console.log(file);
       const relativePath = file.match(regex)[1];
+      // console.log(relativePath);
       documents.push(new Document({ pageContent: text, metadata: { source: relativePath } }));
     })
   );
